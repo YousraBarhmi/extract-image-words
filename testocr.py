@@ -27,8 +27,9 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 TIMEOUT_SECONDS = 30
 
 # Redis configuration from environment
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDISHOST = os.environ["REDISHOST"]  # ⛔️ plantera si la var n'existe pas
+REDISPORT = int(os.environ["REDISPORT"])
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)  # Optional password
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -62,8 +63,8 @@ async def lifespan(app: FastAPI):
     for attempt in range(max_retries):
         try:
             redis_client = redis.Redis(
-                host=REDIS_HOST, 
-                port=REDIS_PORT, 
+                host=REDISHOST, 
+                port=REDISPORT, 
                 db=0, 
                 decode_responses=True,
                 socket_timeout=5,
@@ -71,7 +72,7 @@ async def lifespan(app: FastAPI):
                 retry_on_timeout=True
             )
             await redis_client.ping()
-            logger.info(f"Connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+            logger.info(f"Connected to Redis at {REDISHOST}:{REDISPORT}")
             break
         except Exception as e:
             logger.warning(f"Redis connection attempt {attempt + 1} failed: {e}")
@@ -301,7 +302,7 @@ async def health_check():
         return {
             "status": "healthy",
             "redis": "connected",
-            "redis_host": f"{REDIS_HOST}:{REDIS_PORT}",
+            "REDISHOST": f"{REDISHOST}:{REDISPORT}",
             "models_loaded": len(ocr_models),
             "timestamp": time.time()
         }
@@ -309,7 +310,7 @@ async def health_check():
         return {
             "status": "unhealthy",
             "error": str(e),
-            "redis_host": f"{REDIS_HOST}:{REDIS_PORT}",
+            "REDISHOST": f"{REDISHOST}:{REDISPORT}",
             "timestamp": time.time()
         }
 
@@ -327,7 +328,7 @@ async def get_stats():
             "memory_usage": redis_info.get('used_memory_human', 'unknown'),
             "models_available": list(ocr_models.keys()),
             "uptime": redis_info.get('uptime_in_seconds', 0),
-            "redis_host": f"{REDIS_HOST}:{REDIS_PORT}"
+            "REDISHOST": f"{REDISHOST}:{REDISPORT}"
         }
     except Exception as e:
         return {"error": str(e)}
