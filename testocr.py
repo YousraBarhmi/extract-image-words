@@ -63,9 +63,10 @@ async def lifespan(app: FastAPI):
     for attempt in range(max_retries):
         try:
             redis_client = redis.Redis(
-                host=REDISHOST, 
-                port=REDISPORT, 
-                db=0, 
+                host=REDISHOST,
+                port=REDISPORT,
+                password=REDIS_PASSWORD,  # 👈 ajouté ici
+                db=0,
                 decode_responses=True,
                 socket_timeout=5,
                 socket_connect_timeout=5,
