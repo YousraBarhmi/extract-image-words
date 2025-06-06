@@ -289,7 +289,5 @@ if __name__ == "__main__":
     uvicorn.run(
         "testocr:app",
         host="0.0.0.0",
-        port=8000,
-        workers=1,  # Use 1 worker due to shared OCR models
-        access_log=False  # Disable access logs for better performance
+        port=8000
     )
